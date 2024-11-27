@@ -12,6 +12,6 @@ Welcome to the official repository of KITTY Token, a cyberpunk-inspired meme cry
 
 ## Join Us
 Follow us on social media for updates and community discussions:
-- [Telegram](link-to-telegram)
-- [Twitter](link-to-twitter)
-- [Instagram](link-to-instagram)
+- [Telegram] https://t.me/KITTYTokenHub
+- [Twitter] https://x.com/KITTYTokenHQ
+- [Instagram] https://www.instagram.com/kittytokenofficial/
