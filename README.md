@@ -8,7 +8,7 @@ Welcome to the official repository of KITTY Token, a cyberpunk-inspired meme cry
 
 ## Get Started
 - Explore our [White Paper](docs/whitepaper.pdf) for detailed project goals and tokenomics.
-- Participate in the ongoing [Fair Launch](link-to-fair-launch) and secure your KITTY tokens today.
+- Participate in the ongoing [Fair Launch](https://www.mykittytoken.com/buy-kitty) and secure your KITTY tokens today.
 
 ## Join Us
 Follow us on social media for updates and community discussions:
