@@ -1,5 +1,5 @@
 # KITTY Token 🐾
-Welcome to the official repository of KITTY Token, a cyberpunk-inspired meme cryptocurrency built for fun, utility, and community innovation.
+Welcome to the official repository of KITTY Token, a cyberpunk-inspired cryptocurrency built for fun, utility, and community innovation.
 
 ## Key Features
 - 🐾 **Community Rewards**: Exclusive giveaways and staking incentives for holders.
