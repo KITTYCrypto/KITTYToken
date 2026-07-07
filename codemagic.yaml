@@ -1,0 +1,126 @@
+workflows:
+  chainscope-ios-unsigned-check:
+    name: ChainScope iOS - Unsigned Build Check
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      vars:
+        XCODE_PROJECT: "ios/ChainScopeAI/ChainScopeAI.xcodeproj"
+        XCODE_SCHEME: "ChainScopeAI"
+        BUNDLE_ID: "ai.chainscope.mobile.ios"
+      xcode: latest
+    scripts:
+      - name: Show build environment
+        script: |
+          set -e
+          xcodebuild -version
+          xcodebuild -list -project "$CM_BUILD_DIR/$XCODE_PROJECT"
+      - name: Build unsigned iOS simulator app
+        script: |
+          set -e
+          xcodebuild \
+            -project "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+    artifacts:
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
+  chainscope-ios-sideloadly-ipa:
+    name: ChainScope iOS - Sideloadly IPA
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      vars:
+        XCODE_PROJECT: "ios/ChainScopeAI/ChainScopeAI.xcodeproj"
+        XCODE_SCHEME: "ChainScopeAI"
+        BUNDLE_ID: "ai.chainscope.mobile.ios"
+      xcode: latest
+    scripts:
+      - name: Show build environment
+        script: |
+          set -e
+          xcodebuild -version
+          xcodebuild -list -project "$CM_BUILD_DIR/$XCODE_PROJECT"
+      - name: Build unsigned iPhone device app
+        script: |
+          set -e
+          DERIVED_DATA="$CM_BUILD_DIR/build/DerivedData"
+          xcodebuild \
+            -project "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$DERIVED_DATA" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
+            clean build
+      - name: Package unsigned IPA for Sideloadly
+        script: |
+          set -e
+          APP_PATH="$(find "$CM_BUILD_DIR/build/DerivedData/Build/Products/Release-iphoneos" -maxdepth 1 -name '*.app' -print -quit)"
+          test -n "$APP_PATH"
+          rm -rf "$CM_BUILD_DIR/build/sideloadly"
+          mkdir -p "$CM_BUILD_DIR/build/sideloadly/Payload" "$CM_BUILD_DIR/build/ios/ipa"
+          cp -R "$APP_PATH" "$CM_BUILD_DIR/build/sideloadly/Payload/ChainScopeAI.app"
+          cd "$CM_BUILD_DIR/build/sideloadly"
+          zip -qry "$CM_BUILD_DIR/build/ios/ipa/ChainScopeAI-sideloadly-unsigned.ipa" Payload
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
+  chainscope-ios-testflight:
+    name: ChainScope iOS - App Store Connect Upload
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: chainscope-apple
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: ai.chainscope.mobile.ios
+      vars:
+        XCODE_PROJECT: "ios/ChainScopeAI/ChainScopeAI.xcodeproj"
+        XCODE_SCHEME: "ChainScopeAI"
+        BUNDLE_ID: "ai.chainscope.mobile.ios"
+      xcode: latest
+    scripts:
+      - name: Show build environment
+        script: |
+          set -e
+          xcodebuild -version
+          xcodebuild -list -project "$CM_BUILD_DIR/$XCODE_PROJECT"
+      - name: Apply App Store signing profiles
+        script: |
+          set -e
+          xcode-project use-profiles
+      - name: Set Codemagic build number
+        script: |
+          set -e
+          cd "$CM_BUILD_DIR/ios/ChainScopeAI"
+          agvtool new-version -all "$CM_BUILD_NUMBER" || true
+      - name: Build signed IPA
+        script: |
+          set -e
+          xcode-project build-ipa \
+            --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false
+        submit_to_app_store: false
